@@ -1,0 +1,6 @@
+# Ignore emacs temp files
+*.py#
+*.txt#
+
+# Ignore logs
+*.log
