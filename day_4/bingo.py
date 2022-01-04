@@ -1,30 +1,60 @@
 #!usr/bin/env python
-# Import a dummy input from example
+from __future__ import annotations
+from typing import NamedTuple
 
-input  = '''\
-7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,1
+# PUZZLE 1
 
-22 13 17 11  0
- 8  2 23  4 24
-21  9 14 16  7
- 6 10  3 18  5
- 1 12 20 15 19
+with open('./bingo_input.txt') as file:
+    input = file.read()
 
- 3 15  0  2 22
- 9 18 13 17  5
-19  8  7 25 23
-20 11 10 24  4
-14 21 16 12  6
+# Input parsing, first line numbers represent extracted numbers while tables are single bingo tables, winning tables are represented by either fully complete rows or columns, no diagonals.
 
-14 21 17 24  4
-10 16 15  9 19
-18  8 23 26 20
-22 11 13  6  5
- 2  0 12  3  7
-'''
+# Define a class for table object and a method to parse the tables.
+class Table(NamedTuple):
+    left: set[int] # keep track of the numbers left
+    called: list[int] # keep track of the ones called, used to call winning boards
 
-# input parsing, first line numbers represent extracted numbers while tables are single bingo tables, winnin tables are represented by either fully complete rows or columns, no diagonals.
+    @property
+    def win_or_not(self) -> bool: # property to understand winning tables
+        for i in range(5): # tables are 5x5
+            for j in range(5):
+                if self.called[i * 5 + j] in self.left: # offset within list
+                    break
+                else:
+                    return True
 
-extracted_n, *tables = input.split('\n\n')
+            for j in range(5):
+                if self.called[i + 5 * j] in self.left:
+                    break
+                else:
+                    return True
+        else:
+            return False
+                
+        
 
-print(extracted_n)
+    # Construct a method for parsing tables and append the set and list above
+    @classmethod
+    def parsing(cls, board: str) -> Table: #arrow is used to define metadata components and store them in a dict accessible with the .__annotations__ method
+        ints = [int(s) for s in board.split()]
+        n_left = set(ints)
+        return cls(n_left, ints)
+
+# Parse input
+extracted_n, *tables = input.split('\n\n') # Python splits on both newlines and whitespaces equally
+boards = [Table.parsing(table) for table in tables] # List of n bingo boards, each with 2 attributes, left and called.
+numbers = [int(s) for s in extracted_n.split(',')] # List of extracted numbers
+
+# Iterate through called numbers and boards to understand if a board wins
+def winning_board() -> str:
+    for number in numbers:
+        for board in boards:
+            board.left.discard(number) # Discard a number from a set if present in the called ones
+
+        # Print the product between called numbers and not called ones in the winning board
+        for board in boards:
+            if board.win_or_not:
+                return sum(board.left) * number
+
+
+print(winning_board())
